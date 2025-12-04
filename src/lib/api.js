@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+const API_BASE =
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 function authHeader(token) {
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -70,9 +71,7 @@ export default {
 
   getEnvs: async (token) => {
     const res = await fetch(API_BASE + "/env", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: authHeader(token),
     });
     return res.json();
   },
@@ -82,7 +81,7 @@ export default {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        ...authHeader(token),
       },
       body: JSON.stringify(env),
     });
@@ -98,16 +97,12 @@ export default {
   },
 
   deleteCollection: async (id, token) => {
-  const res = await fetch(`${API_BASE}/collections/${id}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  return res.json();
-},
-
- 
+    const res = await fetch(`${API_BASE}/collections/${id}`, {
+      method: "DELETE",
+      headers: authHeader(token),
+    });
+    return res.json();
+  },
 
   deleteCollectionItem: async (id, token) => {
     const res = await fetch(`${API_BASE}/collections/items/${id}`, {
@@ -116,8 +111,4 @@ export default {
     });
     return res.json();
   },
-
-
-
 };
-

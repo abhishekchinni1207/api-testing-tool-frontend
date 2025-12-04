@@ -7,11 +7,11 @@ export default function EnvPanel({ accessToken, onEnvSelect }) {
   const [variables, setVariables] = useState("");
   const [error, setError] = useState("");
 
+  // Load environments
   useEffect(() => {
-    // load envs only when token is available
     if (!accessToken) return;
     loadEnvs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken]);
 
   async function loadEnvs() {
@@ -22,12 +22,11 @@ export default function EnvPanel({ accessToken, onEnvSelect }) {
       if (Array.isArray(data)) {
         setEnvs(data);
       } else {
-        console.error("Env load error:", data);
+        setEnvs([]); // ✅ SAFETY
         setError(data?.error || "Failed to load environments");
-        setEnvs([]);
       }
     } catch (err) {
-      console.error("Env load network error:", err);
+      console.error("Env load error:", err);
       setError("Network error loading environments");
       setEnvs([]);
     }
@@ -36,6 +35,7 @@ export default function EnvPanel({ accessToken, onEnvSelect }) {
   async function createEnv() {
     try {
       setError("");
+
       if (!name || !variables) {
         setError("Name and variables are required");
         return;
@@ -69,25 +69,25 @@ export default function EnvPanel({ accessToken, onEnvSelect }) {
   }
 
   return (
-   <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-
+    <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
 
       <h3 className="font-semibold">Environments</h3>
 
-      {/* Select existing env */}
+      {/* SELECT ENV */}
       <select
         id="envi-name"
         name="envi-name"
         onChange={(e) => {
-          const env = envs.find((env) => env.id === e.target.value) || null;
+          const env = envs.find(env => env.id === e.target.value) || null;
           onEnvSelect(env);
+          setError(""); // ✅ Clear error when selecting
         }}
         className="w-full border p-2 rounded
-             bg-white dark:bg-gray-700
-             text-gray-900 dark:text-gray-100
-             border-gray-300 dark:border-gray-600"
+          bg-white dark:bg-gray-700
+          text-gray-900 dark:text-gray-100
+          border-gray-300 dark:border-gray-600"
       >
-        <option value="">Select Env</option>
+        <option value="">Select Environment</option>
         {envs.map((e) => (
           <option key={e.id} value={e.id}>
             {e.name}
@@ -95,7 +95,7 @@ export default function EnvPanel({ accessToken, onEnvSelect }) {
         ))}
       </select>
 
-      {/* Create new env */}
+      {/* CREATE ENV */}
       <input
         id="env-name"
         name="env-name"
@@ -103,9 +103,9 @@ export default function EnvPanel({ accessToken, onEnvSelect }) {
         onChange={(e) => setName(e.target.value)}
         placeholder="Environment Name (e.g. DEV)"
         className="w-full border p-2 rounded
-             bg-white dark:bg-gray-700
-             text-gray-900 dark:text-gray-100
-             border-gray-300 dark:border-gray-600"
+          bg-white dark:bg-gray-700
+          text-gray-900 dark:text-gray-100
+          border-gray-300 dark:border-gray-600"
       />
 
       <textarea
@@ -113,11 +113,11 @@ export default function EnvPanel({ accessToken, onEnvSelect }) {
         name="env-values"
         value={variables}
         onChange={(e) => setVariables(e.target.value)}
-        placeholder='{"BASE_URL": "https://jsonplaceholder.typicode.com", "TOKEN": "123"}'
+        placeholder='{"BASE_URL": "https://api.com", "TOKEN": "abc"}'
         className="w-full border p-2 rounded h-24 font-mono
-             bg-white dark:bg-gray-700
-             text-gray-900 dark:text-gray-100
-             border-gray-300 dark:border-gray-600"
+          bg-white dark:bg-gray-700
+          text-gray-900 dark:text-gray-100
+          border-gray-300 dark:border-gray-600"
       />
 
       {error && <p className="text-red-500 text-sm">{error}</p>}
@@ -128,6 +128,7 @@ export default function EnvPanel({ accessToken, onEnvSelect }) {
       >
         Save Environment
       </button>
+
     </div>
   );
 }

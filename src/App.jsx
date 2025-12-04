@@ -9,16 +9,16 @@ import Navbar from "./components/Navbar";
 import AuthPage from "./AuthPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-
 export default function App() {
 
   // 🌗 Theme
-  const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("theme") || "light"
+  );
 
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === "dark") root.classList.add("dark");
-    else root.classList.remove("dark");
+    root.classList.toggle("dark", theme === "dark");
     localStorage.setItem("theme", theme);
   }, [theme]);
 
@@ -27,22 +27,23 @@ export default function App() {
   }
 
   // 🔐 AUTH STATE
-  const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
+  const [accessToken, setAccessToken] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    // Initial session load
     supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setUser(data.session?.user || null);
+      setUser(data?.session?.user || null);
+      setAccessToken(data?.session?.access_token || null);
+      setAuthLoading(false);
     });
 
-    // Listen for changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_, newSession) => {
-      setSession(newSession);
-      setUser(newSession?.user || null);
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+      setAccessToken(session?.access_token || null);
+      setAuthLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -50,8 +51,18 @@ export default function App() {
 
   async function logout() {
     await supabase.auth.signOut();
-    setSession(null);
     setUser(null);
+    setAccessToken(null);
+  }
+
+  // ✅ Prevent flicker while session loads
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center
+        bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300">
+        Loading...
+      </div>
+    );
   }
 
   return (
@@ -72,14 +83,13 @@ export default function App() {
         <Route path="/signup" element={<AuthPage />} />
 
         <Route
-  path="/app"
-  element={
-    <ProtectedRoute user={user}>
-      <MainLayout accessToken={session?.access_token} />
-    </ProtectedRoute>
-  }
-/>
-
+          path="/app"
+          element={
+            <ProtectedRoute user={user}>
+              <MainLayout accessToken={accessToken} />
+            </ProtectedRoute>
+          }
+        />
 
       </Routes>
     </BrowserRouter>

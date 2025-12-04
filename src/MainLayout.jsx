@@ -20,14 +20,19 @@ export default function MainLayout({ accessToken }) {
     (async () => {
       try {
         const data = await api.getHistory(accessToken);
-        if (Array.isArray(data)) setHistory(data);
+
+        if (Array.isArray(data)) {
+          setHistory(data);
+        } else if (data?.error === "Unauthorized") {
+          setGlobalError("Session expired. Please log in again.");
+        } else {
+          setGlobalError(data?.error || "Failed to load history");
+        }
       } catch {
         setGlobalError("Network error loading history");
       }
     })();
   }, [accessToken]);
-  console.log("ACCESS TOKEN:", accessToken);
-
 
   return (
     <div className="min-h-screen pt-16 bg-slate-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -43,10 +48,10 @@ export default function MainLayout({ accessToken }) {
       )}
 
       {/* BODY */}
-      <div className="grid grid-cols-12 gap-4 p-4 h-[calc(100vh-64px)]">
+      <div className="grid grid-cols-12 gap-4 p-4 h-[calc(100vh-64px)] overflow-hidden">
 
         {/* SIDEBAR */}
-        <div className="col-span-3 h-full">
+        <div className="col-span-3 h-full overflow-y-auto">
           <Sidebar
             accessToken={accessToken}
             history={history}
@@ -57,7 +62,7 @@ export default function MainLayout({ accessToken }) {
         </div>
 
         {/* CENTER */}
-        <div className="col-span-5 h-full flex flex-col gap-4 overflow-hidden">
+        <div className="col-span-5 h-full flex flex-col gap-4 overflow-auto">
 
           <EnvPanel
             accessToken={accessToken}
@@ -75,16 +80,15 @@ export default function MainLayout({ accessToken }) {
                 const data = await api.getHistory(accessToken);
                 if (Array.isArray(data)) setHistory(data);
               } catch {
-                setGlobalError("Network error loading history");
+                setGlobalError("Network error refreshing history");
               }
             }}
-            onError={setGlobalError}
           />
 
         </div>
 
         {/* RESPONSE */}
-        <div className="col-span-4 h-full">
+        <div className="col-span-4 h-full overflow-hidden">
           <ResponseViewer response={response} />
         </div>
 

@@ -29,10 +29,24 @@ export default function ApiForm({
     setUrl(req.url || "");
     setMethod(req.method || "GET");
     setBody(req.body ? JSON.stringify(req.body, null, 2) : "");
-    setHeaders(req.headers || [{ key: "", value: "" }]);
-    setParams(req.params || [{ key: "", value: "" }]);
-    setLocalError(null);
+
+    // headers: can be array or object
+    const parsedHeaders = Array.isArray(req.headers)
+      ? req.headers
+      : req.headers
+      ? Object.entries(req.headers).map(([k, v]) => ({ key: k, value: v }))
+      : [{ key: "", value: "" }];
+
+    const parsedParams = Array.isArray(req.params)
+      ? req.params
+      : req.params
+      ? Object.entries(req.params).map(([k, v]) => ({ key: k, value: v }))
+      : [{ key: "", value: "" }];
+
+    setHeaders(parsedHeaders);
+    setParams(parsedParams);
     setJsonError(null);
+    setLocalError(null);
   }, [selectedRequest]);
 
   function validateJson(v) {
@@ -51,8 +65,10 @@ export default function ApiForm({
     validateJson(value);
   }
 
-  // ✅ EXPORT JSON
+  // ✅ Export current request as JSON file
   function exportRequestJson() {
+    if (!url) return alert("Nothing to export");
+
     try {
       const exportData = {
         method,
@@ -77,23 +93,28 @@ export default function ApiForm({
     }
   }
 
-  // ✅ IMPORT JSON
+  // ✅ Import request JSON file
   function importRequestJson(file) {
     if (!file) return;
 
     const reader = new FileReader();
-
     reader.onload = (e) => {
       try {
         const json = JSON.parse(e.target.result);
 
-        if (!json.url || !json.method)
-          return alert("Invalid request file format");
+        if (!json.url || !json.method) {
+          alert("Invalid request file format");
+          return;
+        }
 
         setUrl(json.url);
         setMethod(json.method);
-        setHeaders(json.headers || [{ key: "", value: "" }]);
-        setParams(json.params || [{ key: "", value: "" }]);
+        setHeaders(
+          Array.isArray(json.headers) ? json.headers : [{ key: "", value: "" }]
+        );
+        setParams(
+          Array.isArray(json.params) ? json.params : [{ key: "", value: "" }]
+        );
         setBody(json.body ? JSON.stringify(json.body, null, 2) : "");
 
         alert("Request imported ✅");
@@ -137,17 +158,17 @@ export default function ApiForm({
       let resolvedBody;
 
       if (body) {
-        const parsed = resolveEnv(body, selectedEnv);
-        resolvedBody = JSON.parse(parsed);
+        const replaced = resolveEnv(body, selectedEnv);
+        resolvedBody = JSON.parse(replaced);
       }
 
       const headerObj = {};
-      headers.forEach(({ key, value }) => {
+      (Array.isArray(headers) ? headers : []).forEach(({ key, value }) => {
         if (key.trim()) headerObj[key] = resolveEnv(value, selectedEnv);
       });
 
       const paramObj = {};
-      params.forEach(({ key, value }) => {
+      (Array.isArray(params) ? params : []).forEach(({ key, value }) => {
         if (key.trim()) paramObj[key] = resolveEnv(value, selectedEnv);
       });
 
@@ -161,12 +182,15 @@ export default function ApiForm({
 
       const res = await api.proxy(payload, accessToken);
 
-      if (res?.error) return setLocalError(res.error);
+      if (res?.error) {
+        setLocalError(res.error);
+        return;
+      }
 
       onResponse(res);
     } catch (err) {
       console.error(err);
-      setLocalError("Network error — backend offline?");
+      setLocalError("Request failed. Check backend URL or authentication.");
     } finally {
       setLoading(false);
     }
@@ -174,7 +198,6 @@ export default function ApiForm({
 
   return (
     <div className="bg-white dark:bg-gray-800 p-4 rounded-xl space-y-4">
-
       {/* URL */}
       <input
         value={url}
@@ -188,8 +211,7 @@ export default function ApiForm({
         <select
           value={method}
           onChange={(e) => setMethod(e.target.value)}
-          className={`
-            px-4 py-2 pr-8 rounded font-bold border cursor-pointer
+          className={`px-4 py-2 pr-8 rounded font-bold border cursor-pointer
             bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600
             ${method === "GET" && "text-green-500"}
             ${method === "POST" && "text-orange-500"}
@@ -206,54 +228,67 @@ export default function ApiForm({
         </select>
       </div>
 
-      {/* ✅ TABS */}
+      {/* TABS */}
       <div className="flex border-b dark:border-gray-700 text-sm">
-        {["params", "headers", "body"].map(tab => (
+        {["params", "headers", "body"].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 border-b-2 font-semibold
-              ${activeTab === tab
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}
-            `}
+              ${
+                activeTab === tab
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              }`}
           >
             {tab.toUpperCase()}
           </button>
         ))}
       </div>
 
-      {/* ✅ PARAMS */}
+      {/* PARAMS */}
       {activeTab === "params" && (
         <div>
-          <p className="font-semibold text-sm mb-1">Query Params</p>
-          {params.map((row, idx) => (
+          {(Array.isArray(params) ? params : []).map((row, idx) => (
             <div key={idx} className="flex gap-2 mb-2">
               <input
-                placeholder="Key"
-                className="w-1/3 p-2 border rounded dark:bg-gray-700"
                 value={row.key}
                 onChange={(e) => {
                   const c = [...params];
                   c[idx].key = e.target.value;
                   setParams(c);
                 }}
+                placeholder="Key"
+                className="w-1/3 p-2 border rounded dark:bg-gray-700"
               />
               <input
-                placeholder="Value"
-                className="w-2/3 p-2 border rounded dark:bg-gray-700"
                 value={row.value}
                 onChange={(e) => {
                   const c = [...params];
                   c[idx].value = e.target.value;
                   setParams(c);
                 }}
+                placeholder="Value"
+                className="w-2/3 p-2 border rounded dark:bg-gray-700"
               />
-              <button onClick={() => setParams(params.filter((_, i) => i !== idx))}>✕</button>
+              <button
+                type="button"
+                onClick={() =>
+                  setParams((Array.isArray(params) ? params : []).filter(
+                    (_, i) => i !== idx
+                  ))
+                }
+              >
+                ✕
+              </button>
             </div>
           ))}
+
           <button
-            onClick={() => setParams([...params, { key: "", value: "" }])}
+            type="button"
+            onClick={() =>
+              setParams([...(Array.isArray(params) ? params : []), { key: "", value: "" }])
+            }
             className="text-blue-600 text-sm"
           >
             + Add param
@@ -261,37 +296,52 @@ export default function ApiForm({
         </div>
       )}
 
-      {/* ✅ HEADERS */}
+      {/* HEADERS */}
       {activeTab === "headers" && (
         <div>
-          <p className="font-semibold text-sm mb-1">Headers</p>
-          {headers.map((row, idx) => (
+          {(Array.isArray(headers) ? headers : []).map((row, idx) => (
             <div key={idx} className="flex gap-2 mb-2">
               <input
-                placeholder="Key"
-                className="w-1/3 p-2 border rounded dark:bg-gray-700"
                 value={row.key}
                 onChange={(e) => {
                   const c = [...headers];
                   c[idx].key = e.target.value;
                   setHeaders(c);
                 }}
+                placeholder="Key"
+                className="w-1/3 p-2 border rounded dark:bg-gray-700"
               />
               <input
-                placeholder="Value"
-                className="w-2/3 p-2 border rounded dark:bg-gray-700"
                 value={row.value}
                 onChange={(e) => {
                   const c = [...headers];
                   c[idx].value = e.target.value;
                   setHeaders(c);
                 }}
+                placeholder="Value"
+                className="w-2/3 p-2 border rounded dark:bg-gray-700"
               />
-              <button onClick={() => setHeaders(headers.filter((_, i) => i !== idx))}>✕</button>
+              <button
+                type="button"
+                onClick={() =>
+                  setHeaders((Array.isArray(headers) ? headers : []).filter(
+                    (_, i) => i !== idx
+                  ))
+                }
+              >
+                ✕
+              </button>
             </div>
           ))}
+
           <button
-            onClick={() => setHeaders([...headers, { key: "", value: "" }])}
+            type="button"
+            onClick={() =>
+              setHeaders([
+                ...(Array.isArray(headers) ? headers : []),
+                { key: "", value: "" },
+              ])
+            }
             className="text-blue-600 text-sm"
           >
             + Add header
@@ -299,7 +349,7 @@ export default function ApiForm({
         </div>
       )}
 
-      {/* ✅ BODY */}
+      {/* BODY */}
       {activeTab === "body" && (
         <Editor
           height="220px"
@@ -314,16 +364,16 @@ export default function ApiForm({
       {jsonError && <p className="text-red-500 text-xs">Invalid JSON format</p>}
       {localError && <p className="text-red-500 text-xs">{localError}</p>}
 
-      {/* ✅ FILE IMPORT */}
+      {/* Hidden file input for import */}
       <input
         type="file"
-        accept=".json"
         hidden
         id="importFile"
+        accept=".json"
         onChange={(e) => importRequestJson(e.target.files[0])}
       />
 
-      {/* ✅ BUTTONS */}
+      {/* Buttons */}
       <div>
         <button
           onClick={sendRequest}
@@ -348,13 +398,14 @@ export default function ApiForm({
         </button>
 
         <button
-          onClick={() => document.getElementById("importFile").click()}
+          onClick={() =>
+            document.getElementById("importFile")?.click()
+          }
           className="bg-purple-600 text-white px-6 py-2 rounded ml-3"
         >
           Import JSON
         </button>
       </div>
-
     </div>
   );
 }

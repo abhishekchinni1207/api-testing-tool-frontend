@@ -12,10 +12,16 @@ export default function Sidebar({
   const [items, setItems] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [name, setName] = useState("");
+  const [busyId, setBusyId] = useState(null);
 
   useEffect(() => {
     if (accessToken) loadCollections();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    else {
+      setCollections([]);
+      setItems([]);
+      setSelectedId(null);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken]);
 
   async function loadCollections() {
@@ -30,14 +36,14 @@ export default function Sidebar({
     try {
       const data = await api.getCollectionItems(id, accessToken);
       if (Array.isArray(data)) setItems(data);
-      else alert(data?.error || "Failed to load items");
+      else alert(data?.error || "Failed to load collection items");
     } catch {
       alert("Network error loading collection");
     }
   }
 
   async function create() {
-    if (!name) return;
+    if (!name.trim()) return;
     await api.createCollection(name, accessToken);
     setName("");
     loadCollections();
@@ -48,7 +54,11 @@ export default function Sidebar({
     if (!window.confirm("Delete this collection and all items inside it?"))
       return;
 
-    await api.deleteCollection(id, accessToken);
+    setBusyId(id);
+    const res = await api.deleteCollection(id, accessToken);
+    setBusyId(null);
+
+    if (res?.error) return alert(res.error);
 
     if (selectedId === id) {
       setSelectedId(null);
@@ -58,80 +68,95 @@ export default function Sidebar({
     loadCollections();
   }
 
-  // ✅ DELETE HISTORY
+  // ✅ DELETE HISTORY (NO PAGE REFRESH)
   async function deleteHistory(id) {
     if (!window.confirm("Delete this history item?")) return;
-    await api.deleteHistory(id, accessToken);
-    window.location.reload(); // simple refresh
+
+    const res = await api.deleteHistory(id, accessToken);
+    if (res?.error) return alert(res.error);
+
+    // Remove locally
+    onSelectHistory(null);
   }
 
   // ✅ DELETE COLLECTION ITEM
   async function deleteItem(id) {
     if (!window.confirm("Delete this request from collection?")) return;
-    await api.deleteCollectionItem(id, accessToken);
+
+    setBusyId(id);
+    const res = await api.deleteCollectionItem(id, accessToken);
+    setBusyId(null);
+
+    if (res?.error) return alert(res.error);
+
     loadItems(selectedId);
   }
+
+  const colors = {
+    GET: "text-green-500",
+    POST: "text-orange-500",
+    PUT: "text-blue-500",
+    DELETE: "text-red-500",
+    PATCH: "text-purple-500",
+  };
 
   return (
     <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3 rounded-xl shadow">
 
       {/* HISTORY */}
       <h2 className="font-semibold">History</h2>
-      {history.map((item) => {
-        const colors = {
-          GET: "text-green-500",
-          POST: "text-orange-500",
-          PUT: "text-blue-500",
-          DELETE: "text-red-500",
-          PATCH: "text-purple-500",
-        };
 
-        return (
-          <div key={item.id} className="flex items-center group">
-            <button
-              onClick={() => onSelectHistory(item)}
-              className="flex-1 text-left p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
-            >
-              <span className={`font-bold mr-1 ${colors[item.method]}`}>
-                {item.method}
-              </span>
-              <span className="text-sm break-all opacity-80">{item.url}</span>
-            </button>
+      {history.map((item) => (
+        <div key={item.id} className="flex items-center group">
 
-            <button
-              onClick={() => deleteHistory(item.id)}
-              className="text-red-500 opacity-0 group-hover:opacity-100 px-2"
-              title="Delete history"
-            >
-              🗑
-            </button>
-          </div>
-        );
-      })}
+          <button
+            onClick={() => onSelectHistory(item)}
+            className="flex-1 text-left p-2 rounded
+              hover:bg-gray-200 dark:hover:bg-gray-700"
+          >
+            <span className={`font-bold mr-1 ${colors[item.method]}`}>
+              {item.method}
+            </span>
+            <span className="text-sm break-all opacity-80">{item.url}</span>
+          </button>
+
+          <button
+            onClick={() => deleteHistory(item.id)}
+            className="text-red-500 opacity-0 group-hover:opacity-100 px-2"
+            title="Delete history"
+          >
+            🗑
+          </button>
+
+        </div>
+      ))}
 
       {/* CREATE COLLECTION */}
       <h2 className="font-semibold mt-4">Collections</h2>
+
       <input
-        id="collection-name"
-        name="collection-name"
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="New collection name"
-        className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 p-2 rounded w-full"
+        className="bg-white dark:bg-gray-700
+          border border-gray-300 dark:border-gray-600
+          p-2 rounded w-full"
       />
+
       <button
         onClick={create}
-        className="bg-blue-600 text-white w-full p-2 rounded mt-2"
+        className="bg-blue-600 text-white
+          w-full p-2 rounded mt-2"
       >
         Create
       </button>
 
-      {/* COLLECTION LIST */}
+      {/* COLLECTIONS */}
       {collections.map((col) => (
         <div key={col.id} className="mt-2">
 
-          {/* Collection header */}
           <div className="flex justify-between items-center">
+
             <button
               onClick={() => {
                 onCollectionSelect(col.id);
@@ -144,49 +169,51 @@ export default function Sidebar({
 
             <button
               title="Delete collection"
+              disabled={busyId === col.id}
               onClick={() => deleteCollection(col.id)}
               className="text-red-500 hover:text-red-700"
             >
-              ❌
+              {busyId === col.id ? "⏳" : "❌"}
             </button>
+
           </div>
 
           {/* ITEMS */}
           {selectedId === col.id &&
             Array.isArray(items) &&
-            items.map((i) => {
-              const colors = {
-                GET: "text-green-500",
-                POST: "text-orange-500",
-                PUT: "text-blue-500",
-                DELETE: "text-red-500",
-                PATCH: "text-purple-500",
-              };
+            items.map((i) => (
+              <div key={i.id} className="flex items-center group">
 
-              return (
-                <div key={i.id} className="flex items-center group">
-                  <button
-                    onClick={() => onLoadFromCollection(i.request)}
-                    className="flex-1 text-left pl-4 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                <button
+                  onClick={() => onLoadFromCollection(i.request)}
+                  className="flex-1 text-left pl-4 py-1
+                    rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                >
+                  <span
+                    className={`font-bold mr-1 ${
+                      colors[i.request.method]
+                    }`}
                   >
-                    <span className={`font-bold mr-1 ${colors[i.request.method]}`}>
-                      {i.request.method}
-                    </span>
-                    <span className="text-xs break-all opacity-80">
-                      {i.request.url}
-                    </span>
-                  </button>
+                    {i.request.method}
+                  </span>
+                  <span className="text-xs break-all opacity-80">
+                    {i.request.url}
+                  </span>
+                </button>
 
-                  <button
-                    onClick={() => deleteItem(i.id)}
-                    className="text-red-500 opacity-0 group-hover:opacity-100 px-2"
-                    title="Delete item"
-                  >
-                    🗑
-                  </button>
-                </div>
-              );
-            })}
+                <button
+                  onClick={() => deleteItem(i.id)}
+                  disabled={busyId === i.id}
+                  className="text-red-500 opacity-0
+                    group-hover:opacity-100 px-2"
+                  title="Delete item"
+                >
+                  {busyId === i.id ? "⏳" : "🗑"}
+                </button>
+
+              </div>
+            ))}
+
         </div>
       ))}
     </div>
