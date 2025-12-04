@@ -1,16 +1,157 @@
-# React + Vite
+# ✅ API Testing Tool — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend web application for the API Testing Tool built with **React, Vite, TailwindCSS, Monaco Editor, and Supabase Auth**.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Live App
+```
+https://api-testing-tool-five.vercel.app
+```
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🏗 Tech Stack
 
-## Expanding the ESLint configuration
+| Technology | Purpose |
+|------------|---------|
+| React | UI framework |
+| Vite | Fast build tool |
+| TailwindCSS | Styling |
+| Monaco Editor | JSON editor |
+| Supabase | Authentication |
+| Vercel | Deployment |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 🔐 Authentication
+
+This app uses **Supabase Auth** for:
+- Login
+- Signup
+- Session persistence
+- Access protection
+
+Unauthorized users are redirected automatically.
+
+---
+
+## 📦 Features
+
+- ✅ REST API Client (like Postman)
+- ✅ Auth (Signup/Login)
+- ✅ GET / POST / PUT / DELETE / PATCH
+- ✅ Headers Editor
+- ✅ Params Editor
+- ✅ JSON Request Body Editor
+- ✅ Import/Export Requests
+- ✅ API History
+- ✅ Collections
+- ✅ Environments
+- ✅ Dark / Light Mode
+- ✅ Monaco Code Editor
+- ✅ Secure proxy
+- ✅ Response Viewer
+
+---
+
+## 📁 Project Structure
+
+```
+src/
+ ├─ components/
+ │  ├─ ApiForm.jsx
+ │  ├─ Sidebar.jsx
+ │  ├─ Navbar.jsx
+ │  ├─ ResponseViewer.jsx
+ │  ├─ EnvPanel.jsx
+ │  └─ ProtectedRoute.jsx
+ │
+ ├─ pages/
+ │  ├─ Home.jsx
+ │  └─ About.jsx
+ │
+ ├─ lib/
+ │  └─ api.js
+ │
+ ├─ utils/
+ │  └─ envResolver.js
+ │
+ ├─ AuthPage.jsx
+ ├─ MainLayout.jsx
+ ├─ App.jsx
+ └─ supabaseClient.js
+```
+
+---
+
+## ⚙️ Environment Variables
+
+Create `.env` file in root:
+
+```
+VITE_BACKEND_URL=https://api-testing-tool-backend-fyzg.onrender.com
+VITE_SUPABASE_URL=your_supabase_project
+VITE_SUPABASE_ANON_KEY=your_anon_key
+```
+
+⚠️ `.env` SHOULD NOT BE COMMITTED (Already in `.gitignore`)
+
+---
+
+## ▶️ Run Locally
+
+```bash
+npm install
+npm run dev
+```
+
+App runs at:
+```
+http://localhost:5173
+```
+
+---
+
+## 📤 Deployment (Vercel)
+
+### Build Command:
+```
+npm run build
+```
+
+### Output Directory:
+```
+dist
+```
+
+### Add environment variables in Vercel:
+- VITE_BACKEND_URL
+- VITE_SUPABASE_URL
+- VITE_SUPABASE_ANON_KEY
+
+---
+
+## ✅ Security
+
+- Auth-protected pages
+- Token-secured backend requests
+- Safe request forwarding
+- Enforced CORS rules
+- No secrets in frontend
+
+---
+
+## 🎯 Roadmap
+
+- ✅ Monoco JSON validator
+- ✅ Export collections
+- ✅ Header presets
+- ✅ Collaboration mode
+- ✅ API performance graphs
+- ✅ Team-based collections
+
+---
+
+## 👨‍💻 Maintained By
+API Testing Tool Team
