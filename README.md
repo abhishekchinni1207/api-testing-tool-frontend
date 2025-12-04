@@ -1,17 +1,17 @@
-# ✅ API Testing Tool — Frontend
+# API Testing Tool — Frontend
 
 Frontend web application for the API Testing Tool built with **React, Vite, TailwindCSS, Monaco Editor, and Supabase Auth**.
 
 ---
 
-## 🚀 Live App
+##  Live App
 ```
 https://api-testing-tool-five.vercel.app
 ```
 
 ---
 
-## 🏗 Tech Stack
+##  Tech Stack
 
 | Technology | Purpose |
 |------------|---------|
@@ -24,7 +24,7 @@ https://api-testing-tool-five.vercel.app
 
 ---
 
-## 🔐 Authentication
+##  Authentication
 
 This app uses **Supabase Auth** for:
 - Login
@@ -36,26 +36,26 @@ Unauthorized users are redirected automatically.
 
 ---
 
-## 📦 Features
+##  Features
 
-- ✅ REST API Client (like Postman)
-- ✅ Auth (Signup/Login)
-- ✅ GET / POST / PUT / DELETE / PATCH
-- ✅ Headers Editor
-- ✅ Params Editor
-- ✅ JSON Request Body Editor
-- ✅ Import/Export Requests
-- ✅ API History
-- ✅ Collections
-- ✅ Environments
-- ✅ Dark / Light Mode
-- ✅ Monaco Code Editor
-- ✅ Secure proxy
-- ✅ Response Viewer
+-  REST API Client (like Postman)
+-  Auth (Signup/Login)
+-  GET / POST / PUT / DELETE / PATCH
+-  Headers Editor
+-  Params Editor
+-  JSON Request Body Editor
+-  Import/Export Requests
+-  API History
+-  Collections
+-  Environments
+-  Dark / Light Mode
+-  Monaco Code Editor
+-  Secure proxy
+-  Response Viewer
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 src/
@@ -85,7 +85,7 @@ src/
 
 ---
 
-## ⚙️ Environment Variables
+##  Environment Variables
 
 Create `.env` file in root:
 
@@ -95,11 +95,11 @@ VITE_SUPABASE_URL=your_supabase_project
 VITE_SUPABASE_ANON_KEY=your_anon_key
 ```
 
-⚠️ `.env` SHOULD NOT BE COMMITTED (Already in `.gitignore`)
+`.env` SHOULD NOT BE COMMITTED (Already in `.gitignore`)
 
 ---
 
-## ▶️ Run Locally
+##  Run Locally
 
 ```bash
 npm install
@@ -113,7 +113,7 @@ http://localhost:5173
 
 ---
 
-## 📤 Deployment (Vercel)
+##  Deployment (Vercel)
 
 ### Build Command:
 ```
@@ -132,7 +132,7 @@ dist
 
 ---
 
-## ✅ Security
+##  Security
 
 - Auth-protected pages
 - Token-secured backend requests
@@ -142,16 +142,16 @@ dist
 
 ---
 
-## 🎯 Roadmap
+##  Roadmap
 
-- ✅ Monoco JSON validator
-- ✅ Export collections
-- ✅ Header presets
-- ✅ Collaboration mode
-- ✅ API performance graphs
-- ✅ Team-based collections
+-  Monoco JSON validator
+-  Export collections
+-  Header presets
+-  Collaboration mode
+-  API performance graphs
+-  Team-based collections
 
 ---
 
-## 👨‍💻 Maintained By
+##  Maintained By
 API Testing Tool Team
